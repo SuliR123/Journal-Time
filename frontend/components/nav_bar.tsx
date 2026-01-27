@@ -12,13 +12,13 @@ export default function NavBar() {
         <div className="h-[1vh]"></div>
         <div className="flex flex-row items-center justify-between gap-4 w-[85vw] h-[10vh]">
             <span className="font-hack text-[30px] text-icon-color">JournalTime</span>
-            <div className="flex flex-row items-center gap-6 w-full h-full">
+            <div className="flex flex-row items-center gap-6 w-[100%] h-[100%]">
                 <IconLink icon={<NotebookIcon />} link="/gallery"/>
                 <IconLink icon={<ClockIcon />} link="/test"/>
                 <IconLink icon={<NoteIcon />} link="/"/>
                 <IconLink icon={<StatsIcon />} link="/stats"/>
             </div>
-            <IconLink icon={<ProfileIcon className="w-6 h-6"/>} link="/profile"/>
+            <IconLink icon={<ProfileIcon/>} link="/profile" displayText="user_name"/>
         </div>
     </div>)
 }

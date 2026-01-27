@@ -1,5 +1,3 @@
-import { Dispatch, SetStateAction } from "react";
-
 export default class Timer {
     currentTime: number;
     paused: boolean;
@@ -28,10 +26,7 @@ export default class Timer {
     }
 
     reset() {
-        this.paused = true; 
-        if(this.timer) {
-            clearInterval(this.timer);
-        }
+        this.pause()
         this.currentTime = 0; 
     }
 
