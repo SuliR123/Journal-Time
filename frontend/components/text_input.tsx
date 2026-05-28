@@ -98,6 +98,9 @@ export default function TextInput() {
   // text input format
   const currentFormatStyle = getFormatStyle(format)
 
+  // Date
+  const date: Date = new Date()
+
   useEffect(() => {
     setNumWords(getNumberOfWords(text));
     setStartTimer(numWords > 0);
@@ -118,7 +121,7 @@ export default function TextInput() {
     <div className="relative flex items-center justify-center flex-col gap-3 h-full">
         <OverlayComponent 
             header={<SubmissionComponents title={title} setTitle={setTitle}/>}
-            subheading1={<span>Date</span>} 
+            subheading1={<span>Date: {date.toLocaleDateString()}</span>} 
             subheading2={<span>Location</span>}
             show={popup} 
             body={[
@@ -151,6 +154,7 @@ export default function TextInput() {
             setText("");
             setStartTimer(false);
             timerRef.current.reset(); 
+            setTitle("")
             }}
         />
         <IconButton icon={<CheckmarkIcon/>} onClick={() => {

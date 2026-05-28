@@ -26,3 +26,7 @@ GALLERY:
 - Creating Boards 
 - Deleted notes, stored in trash until permenently deleted
 - viewing notes, editing notes
+
+
+MARKETING?:
+Pitch to a hospital to see if it can help people with dementia remember their thoughts and what not
