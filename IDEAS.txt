@@ -1,0 +1,28 @@
+NOTES: (Fields: Title, Board)
+- Default "Quick Notes" board to just add little thoughts and stuff
+- Allowing users to "post" their entries, other people can view them/type them if they want to
+- Anonymous users for posting
+- Sharing notes to people
+- "1 off" notes, notes that expire after a certain amount of time (quick lists, small stuff)
+- stash button, to store the current typed note (if it isn't done)
+
+NEW LAYOUT IDEA FOR NOTE. Combination of Arc Sidebar + Substack note formatting + MonkeyType minimalism
+- Change navbar to hidden sidebar (hidden when typing on notes)
+- Create tabs within the app on the note page (perhaps look if notion or other apps do this), 
+  when opening a new "tab" (which would be a note) allow the user to search for existing or create a new one
+- Top of the page will offer all of the formatting stuff (focused, paragraph, one time note, etc)
+
+
+ANALYTICS/STATS:
+- Weekly recap of typed notes and stuff
+- Journal Goals
+- A YEAR AGO TODAY, LOCATION
+
+TYPE TEST:
+- Type testing your own journal entries, take a random slice of the entry
+- Making a type test from random words you've typed, able to select word count, time, etc
+
+GALLERY:
+- Creating Boards 
+- Deleted notes, stored in trash until permenently deleted
+- viewing notes, editing notes

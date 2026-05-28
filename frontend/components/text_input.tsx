@@ -1,14 +1,18 @@
-import { useEffect, useRef, useState } from "react";
+import { Dispatch, SetStateAction, useEffect, useRef, useState } from "react";
 import CheckmarkIcon from "@/public/checkmark.svg"
 import RestartIcon from "@/public/restart.svg"
 import NoteIcon from "@/public/note.svg"
 import IconButton from "./icon_button";
+import ParagraphIcon from "@/public/paragraphFormat.svg"
+import FocusedIcon from "@/public/focused.svg"
 import Timer from "../models/timer";
 import ButtonHolder from "./button_holder";
 import { Format } from "@/models/format"
-import OverlayComponent from "./overlay_component";
+import SplitOverlayComponent from "./split_overlay_component";
 import StatsPage from "./stats";
 import SearchBar from "./search_bar";
+import BoardPopup from "./board_popup";
+import OverlayComponent from "./overlay_component";
 
 function getNumberOfWords(text: string): number {
     let words: string[] = text.split(/\s+/);
@@ -33,6 +37,49 @@ function getFormatStyle(format : Format): string {
     }
 }
 
+function wpm(wordCount: number, timeSeconds: number): number {
+    const wordsPerSecond = wordCount / timeSeconds
+    return Math.floor(wordsPerSecond * 60)
+}
+
+function formatTime(totalSeconds: number): string {
+    const hours = Math.floor(totalSeconds / 3600)
+    const minutes = Math.floor(totalSeconds / 60) % 60
+    const seconds = totalSeconds % 60
+    return `${formatZeros(hours)}:${formatZeros(minutes)}:${formatZeros(seconds)}`
+}
+
+function formatZeros(n: number): string {
+    if (n < 10 ) {
+        return `0${n}`
+    } else {
+        return `${n}`
+    }
+}
+
+interface SubmissionProps {
+    title: string
+    setTitle: Dispatch<SetStateAction<string>>
+}
+
+function SubmissionComponents({title, setTitle} : SubmissionProps) {
+    return (
+        <div className="flex flex-row w-full h-full justify-between items-center">
+            <input
+                id="titleBox"
+                value={title}
+                onChange={(e) => 
+                    {
+                        setTitle(e.target.value)
+                    }}
+                placeholder="Title..."
+                className={`resize-none whitespace-nowrap overflow-x-scroll [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden overflow-hidden focus:outline-none text-nowrap font-bold font-hack text-[40px] w-full h-full`} 
+            />
+            <SearchBar />
+        </div>
+    )
+}
+
 export default function TextInput() {
   
   // text states  
@@ -46,6 +93,10 @@ export default function TextInput() {
 
   // popup 
   const [popup, setPopup] = useState(false)
+  const [title, setTitle] = useState("")
+
+  // text input format
+  const currentFormatStyle = getFormatStyle(format)
 
   useEffect(() => {
     setNumWords(getNumberOfWords(text));
@@ -64,34 +115,37 @@ export default function TextInput() {
 
   // TODO: When going from full to focused if the user scrolled, it might refocus weird
   return (
-    <div className="relative flex items-center justify-center flex-col gap-3">
-        <OverlayComponent show={popup} 
-            left={<StatsPage seconds={timerRef.current.currentTime} wordCount={numWords}/>} 
-            right={<SearchBar />} 
-            toggle={setPopup}
-            onSubmit={() => 
-                {
-                    timerRef.current.reset()
-                    setStartTimer(false); 
-                    setText("")
-                }
-            }
-            onClose={() => timerRef.current.start()}
+    <div className="relative flex items-center justify-center flex-col gap-3 h-full">
+        <OverlayComponent 
+            header={<SubmissionComponents title={title} setTitle={setTitle}/>}
+            subheading1={<span>Date</span>} 
+            subheading2={<span>Location</span>}
+            show={popup} 
+            body={[
+                {title: "Word Count", value: `${numWords}`},
+                {title: "Time Elapsed", value: formatTime(timerRef.current.getTime())},
+                {title: "WPM", value: `${wpm(numWords, timerRef.current.getTime())}`}
+            ]}
+            onClose={() => {
+                setPopup(false)
+                timerRef.current.start()
+            }}
+            onSubmit={() => {}}
         />
         <ButtonHolder>
-            <IconButton icon={<NoteIcon />} onClick={() => {setFormat(Format.FULL)}} displayText="full"/>
-            <IconButton icon={<NoteIcon />} onClick={() => {
+            <IconButton icon={<ParagraphIcon />} onClick={() => {setFormat(Format.FULL)}} displayText="full"/>
+            <IconButton icon={<FocusedIcon />} onClick={() => {
                 setFormat(Format.FOCUSED)}
             } displayText="focused"/> 
         </ButtonHolder>
-        <span className="w-[85vw] text-[24px] text-start font-bold font-hack">{numWords}</span>
+        <span className="w-[75vw] text-[24px] text-start font-bold font-hack">{numWords}</span>
       <textarea 
         id={"textBox"}
         value={text}
         onChange={(e) => setText(e.target.value)}
         placeholder="Type something..."
-        className={`${getFormatStyle(format)} focus:outline-none w-[85vw] text-[24px] text-start font-bold font-hack`}
-      />
+        className={`${currentFormatStyle} resize-none focus:outline-none w-[75vw] text-[24px] text-start font-bold font-hack`}
+      /> {/* TODO ADD CURSOR ANIMATION */}
       <ButtonHolder transparent={true}>
         <IconButton icon={<RestartIcon/>} onClick={() => {
             setText("");

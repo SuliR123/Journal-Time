@@ -3,7 +3,7 @@ import TextInput from "@/components/text_input";
 
 export default function Home() {
   return (
-    <div className="flex h-[76vh] items-center justify-center">
+    <div className="flex h-[100vh] items-center justify-center">
           <TextInput />
     </div>
   );

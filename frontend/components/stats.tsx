@@ -1,7 +1,9 @@
+import { Dispatch, SetStateAction } from "react"
 
 interface StatsPageProps {
     seconds: number
     wordCount: number
+    wrongWords?: number
 }
 
 function formatZeros(n: number): string {
@@ -24,12 +26,16 @@ function formatTime(totalSeconds: number): string {
     return `${formatZeros(hours)}:${formatZeros(minutes)}:${formatZeros(seconds)}`
 }
 
-export default function StatsPage({seconds, wordCount} : StatsPageProps) {
+export default function StatsPage({seconds, wordCount, wrongWords = 0} : StatsPageProps) {
     return(
-        <div className="flex flex-col justify-evenly items-start w-full h-full text-[24px] font-hack">
-            <span>{`WPM: ${wpm(wordCount, seconds)}`}</span>
-            <span>{`Elapsed Time: ${formatTime(seconds)}`}</span>
-            <span>{`Word Count: ${wordCount}`}</span>
+        <div className="flex flex-col justify-between items-start w-full h-full text-[24px] font-hack">
+            <div className="flex flex-col justify-start items-start gap-5">
+                <span className="text-[28px] font-bold">STATS</span>
+                <span>{`WPM: ${wpm(wordCount, seconds)}`}</span>
+                <span>{`Elapsed Time: ${formatTime(seconds)}`}</span>
+                <span>{`Word Count: ${wordCount}`}</span>
+            </div>
+            
         </div>
     )
 }
