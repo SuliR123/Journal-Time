@@ -148,7 +148,7 @@ export default function TextInput() {
         onChange={(e) => setText(e.target.value)}
         placeholder="Type something..."
         className={`${currentFormatStyle} resize-none focus:outline-none w-[75vw] text-[24px] text-start font-bold font-hack`}
-      /> {/* TODO ADD CURSOR ANIMATION */}
+      /> {/* TODO ADD CURSOR ANIMATION AND LOCATION DATA */}
       <ButtonHolder transparent={true}>
         <IconButton icon={<RestartIcon/>} onClick={() => {
             setText("");
