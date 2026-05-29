@@ -14,6 +14,21 @@ import SearchBar from "./search_bar";
 import BoardPopup from "./board_popup";
 import OverlayComponent from "./overlay_component";
 
+interface LocationData {
+    longitude: number
+    latitude: number
+    accuracy: number
+    found: boolean
+    name?: string
+}
+
+interface SubmissionProps {
+    title: string
+    setTitle: Dispatch<SetStateAction<string>>
+    placeholder: string
+    size: number
+}
+
 function getNumberOfWords(text: string): number {
     let words: string[] = text.split(/\s+/);
     let count: number = 0; 
@@ -57,26 +72,63 @@ function formatZeros(n: number): string {
     }
 }
 
-interface SubmissionProps {
-    title: string
-    setTitle: Dispatch<SetStateAction<string>>
+function getLocationData(setLocationData: Dispatch<SetStateAction<LocationData>>) {
+    if ("geolocation" in navigator) {
+        navigator.geolocation.getCurrentPosition(
+            (position: GeolocationPosition) => {
+                setLocationData({
+                    latitude: position.coords.latitude,
+                    longitude: position.coords.longitude,
+                    accuracy: position.coords.accuracy,
+                    found: true
+                })
+            },
+            (error: GeolocationPositionError) => {
+                console.error("Error code:", error.code);
+                console.error("Error message:", error.message);
+                setLocationData({
+                    latitude: 0,
+                    longitude: 0,
+                    accuracy: 0,
+                    found: false
+                })
+            },
+            { enableHighAccuracy: true, timeout: 5000, maximumAge: 0 }
+        );
+    } else {
+        setLocationData({
+            latitude: 0,
+            longitude: 0,
+            accuracy: 0,
+            found: false
+        })
+    }
 }
 
-function SubmissionComponents({title, setTitle} : SubmissionProps) {
+function SubmissionComponents({title, setTitle, placeholder, size} : SubmissionProps) {
     return (
         <div className="flex flex-row w-full h-full justify-between items-center">
-            <input
-                id="titleBox"
-                value={title}
-                onChange={(e) => 
-                    {
-                        setTitle(e.target.value)
-                    }}
-                placeholder="Title..."
-                className={`resize-none whitespace-nowrap overflow-x-scroll [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden overflow-hidden focus:outline-none text-nowrap font-bold font-hack text-[40px] w-full h-full`} 
-            />
+            <InputArea title={title} setTitle={setTitle} placeholder={placeholder} size={size}/>
             <SearchBar />
         </div>
+    )
+}
+
+function InputArea({title, setTitle, placeholder, size} : SubmissionProps) {
+
+    const className = `resize-none whitespace-nowrap overflow-x-scroll [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden overflow-hidden focus:outline-none text-nowrap font-bold font-hack w-full h-full text-[${size}px]`
+
+    return (
+        <input
+            id="titleBox"
+            value={title}
+            onChange={(e) => 
+                {
+                    setTitle(e.target.value)
+                }}
+            placeholder={placeholder}
+            className={className}
+        />
     )
 }
 
@@ -101,6 +153,15 @@ export default function TextInput() {
   // Date
   const date: Date = new Date()
 
+  // Location
+  const [locationData, setLocationData] = useState<LocationData>({
+    longitude: 0,
+    latitude: 0,
+    accuracy: 0,
+    found: false
+  })
+  const [locationName, setLocationName] = useState("")
+
   useEffect(() => {
     setNumWords(getNumberOfWords(text));
     setStartTimer(numWords > 0);
@@ -120,9 +181,9 @@ export default function TextInput() {
   return (
     <div className="relative flex items-center justify-center flex-col gap-3 h-full">
         <OverlayComponent 
-            header={<SubmissionComponents title={title} setTitle={setTitle}/>}
+            header={<SubmissionComponents title={title} setTitle={setTitle} placeholder="Title..." size={40}/>}
             subheading1={<span>Date: {date.toLocaleDateString()}</span>} 
-            subheading2={<span>Location</span>}
+            subheading2={<InputArea title={locationName} setTitle={setLocationName} placeholder="location" size={18}/>}
             show={popup} 
             body={[
                 {title: "Word Count", value: `${numWords}`},
@@ -133,7 +194,13 @@ export default function TextInput() {
                 setPopup(false)
                 timerRef.current.start()
             }}
-            onSubmit={() => {}}
+            onSubmit={() => {
+                // TODO: SUBMIT THE TEXT
+            }}
+            onMount={() => {
+                getLocationData(setLocationData) 
+                console.log(locationData)
+            }}
         />
         <ButtonHolder>
             <IconButton icon={<ParagraphIcon />} onClick={() => {setFormat(Format.FULL)}} displayText="full"/>

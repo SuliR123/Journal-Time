@@ -17,6 +17,7 @@ ANALYTICS/STATS:
 - Weekly recap of typed notes and stuff
 - Journal Goals
 - A YEAR AGO TODAY, LOCATION
+- FOR LOCATION: Get the geolocation of the person and extract the city (or overarching area) from the longitude latitude 
 
 TYPE TEST:
 - Type testing your own journal entries, take a random slice of the entry

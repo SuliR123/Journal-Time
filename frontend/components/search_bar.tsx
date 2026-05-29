@@ -19,7 +19,7 @@ export default function SearchBar({ background = false } : SearchBarProps) {
                     value={searchText}
                     onChange={(e) => 
                         {
-                            if(e.target.value.indexOf("\n") == -1) {
+                            if(e.target.value.indexOf("\n") == -1) { // check if the user hasn't submitted the search
                                 setSearch(e.target.value)
                             } else {
                                 // TODO call search function

@@ -17,7 +17,8 @@ interface OverlayComponentParams {
     body: BodyParam[]
     onClose: () => void
     onSubmit: () => void
-    show?: boolean   
+    show?: boolean
+    onMount?: () => void
 }
 
 function createBodyComponent(bodyParam : BodyParam, lineWidth: number, index: number) {
@@ -32,7 +33,7 @@ function createBodyComponent(bodyParam : BodyParam, lineWidth: number, index: nu
     )
 }
 
-export default function OverlayComponent({ header, subheading1, subheading2, body, onClose, onSubmit, show } : OverlayComponentParams) {
+export default function OverlayComponent({ header, subheading1, subheading2, body, onClose, onSubmit, show, onMount} : OverlayComponentParams) {
     // TODO: ADD actions like downloading the document as a pdf, sharing, etc
 
     const divRef = useRef<HTMLDivElement>(null);
@@ -41,6 +42,10 @@ export default function OverlayComponent({ header, subheading1, subheading2, bod
     useEffect(() => {
         if (divRef && divRef.current) {
             setWidth(divRef.current.offsetWidth * .95);
+        }
+        
+        if(show && onMount) {
+            onMount()
         }
     }, [show]); // Recalculate when show changes
     
