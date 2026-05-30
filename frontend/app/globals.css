@@ -1,0 +1,27 @@
+@import "tailwindcss";
+
+:root {
+  --matcha: #7A8450;
+  --strawberry: #F9CDD5;
+  --cream: #F2EAD0;
+  --burgandy: #4E1921;
+  --olive-green: #403811;
+  --light-olive-green: #A69A5D;
+  --grey-brown: #A6977C;
+  --dark-brown: #402401; 
+  --khaki: #59441D; 
+}
+
+@theme inline {
+  --color-background-color: var(--matcha);
+  --color-text-color: var(--cream);
+  --color-icon-color: var(--strawberry);
+  --font-eb-garamond: var(--font-eb-garamond);
+  --font-hack: var(--font-hack);
+}
+
+body {
+  background: var(--matcha);
+  color: var(--cream);
+  font-family: Arial, Helvetica, sans-serif;
+}
