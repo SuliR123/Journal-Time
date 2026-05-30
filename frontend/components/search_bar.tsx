@@ -12,7 +12,7 @@ export default function SearchBar({ background = false } : SearchBarProps) {
 
     return (
         <div className={`h-8 ${backgroundColor} rounded-sm`}>
-            <div className={`flex flex-row justify-center items-center fill-icon-color hover:fill-text-color gap-3 h-8 w-full ${brightness}`}>
+            <div className={`flex flex-row justify-center items-center fill-icon-color hover:fill-text-color gap-3 h-8 ${brightness}`}>
                 <SearchIcon className={`w-6 h-6`}/>
                 <input
                     id="searchBox"

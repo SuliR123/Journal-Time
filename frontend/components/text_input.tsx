@@ -215,13 +215,20 @@ export default function TextInput() {
         onChange={(e) => setText(e.target.value)}
         placeholder="Type something..."
         className={`${currentFormatStyle} resize-none focus:outline-none w-[75vw] text-[24px] text-start font-bold font-hack`}
-      /> {/* TODO ADD CURSOR ANIMATION AND LOCATION DATA */}
+      /> {/* TODO ADD CURSOR ANIMATION */}
       <ButtonHolder transparent={true}>
         <IconButton icon={<RestartIcon/>} onClick={() => {
             setText("");
             setStartTimer(false);
             timerRef.current.reset(); 
             setTitle("")
+            setLocationName("")
+            setLocationData({
+                longitude: 0,
+                latitude: 0,
+                accuracy: 0,
+                found: false
+            })
             }}
         />
         <IconButton icon={<CheckmarkIcon/>} onClick={() => {

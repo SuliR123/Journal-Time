@@ -55,7 +55,7 @@ export default function OverlayComponent({ header, subheading1, subheading2, bod
 
     return (
         <div className="flex items-center justify-center absolute w-[100vw] h-[100vh] z-20">
-            <div className="flex items-center justify-center w-[40%] h-[70%] bg-background-color z-40 rounded-lg">
+            <div className="flex items-center justify-center w-[50%] h-[70%] bg-background-color z-40 rounded-lg">
                 <div ref={divRef} className="flex flex-col justify-start items-start w-[93%] h-[93%] px-4">
                     <div className="flex flex-col justify-start items-start w-full h-[25%] gap-5">
                         <div className="flex flex-col justify-center items-start w-full h-[50%]">
