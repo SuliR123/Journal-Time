@@ -41,8 +41,8 @@ export default function NavBar() {
                 </div>
                 {hover && <SVGLine lineHeight={height} horizontal={false} strokeWidth={1}/>}
             </div>
-            <div className="pt-7 pr-9 pointer-events-auto">
-                <IconLink icon={<ProfileIcon/>} link="/profile" displayText="user_name"/>
+            <div className="pt-8 pr-9 pointer-events-auto">
+                <IconLink icon={<ProfileIcon/>} link="/profile"/>
             </div>
         </div>
     </div>)

@@ -5,10 +5,18 @@ interface ScrollParams {
 }
 
 export default function Scroll({ vertical = false, children } : ScrollParams) {
-    const dir = (vertical) ? "grid-col-2 grid-flow-row overflow-y-auto gap-3 w-full h-full" : "grid-rows-2 grid-flow-col overflow-x-auto gap-3 w-full h-full"
+
+    /*
+    There should be: 
+    a minimum number of columns (2)
+    size of items in the grid should increase in size until another item could be fit into the row (max size for items essentially)
+    number of columns changes dynamically
+    */
+
+    const dir = (vertical) ? "grid-cols-2 md:grid-cols-4 grid-flow-row overflow-y-auto gap-5 pr-2" : "grid-rows-2 grid-flow-col overflow-x-auto gap-5"
     return (
         <div className={`
-                grid ${dir}
+                grid ${dir} w-full h-full
                 [&::-webkit-scrollbar]:w-2 
                 [&::-webkit-scrollbar]:h-2
                 [&::-webkit-scrollbar-track]:bg-bg-color

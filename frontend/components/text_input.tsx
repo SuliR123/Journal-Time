@@ -26,7 +26,7 @@ interface SubmissionProps {
     title: string
     setTitle: Dispatch<SetStateAction<string>>
     placeholder: string
-    size: number
+    big: boolean 
 }
 
 function getNumberOfWords(text: string): number {
@@ -105,18 +105,19 @@ function getLocationData(setLocationData: Dispatch<SetStateAction<LocationData>>
     }
 }
 
-function SubmissionComponents({title, setTitle, placeholder, size} : SubmissionProps) {
+function SubmissionComponents({title, setTitle, placeholder, big} : SubmissionProps) {
     return (
         <div className="flex flex-row w-full h-full justify-between items-center">
-            <InputArea title={title} setTitle={setTitle} placeholder={placeholder} size={size}/>
+            <InputArea title={title} setTitle={setTitle} placeholder={placeholder} big={big}/>
             <SearchBar />
         </div>
     )
 }
 
-function InputArea({title, setTitle, placeholder, size} : SubmissionProps) {
+function InputArea({title, setTitle, placeholder, big} : SubmissionProps) {
 
-    const className = `resize-none whitespace-nowrap overflow-x-scroll [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden overflow-hidden focus:outline-none text-nowrap font-bold font-hack w-full h-full text-[${size}px]`
+    const text = big ? "text-[40px]" : "text-[18px]"
+    const className = `resize-none whitespace-nowrap overflow-x-scroll [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden overflow-hidden focus:outline-none text-nowrap font-bold font-hack w-full h-full ${text}`
 
     return (
         <input
@@ -181,9 +182,14 @@ export default function TextInput() {
   return (
     <div className="relative flex items-center justify-center flex-col gap-3 h-full">
         <OverlayComponent 
-            header={<SubmissionComponents title={title} setTitle={setTitle} placeholder="Title..." size={40}/>}
+            header={<SubmissionComponents title={title} setTitle={setTitle} placeholder="Title..." big={true}/>}
             subheading1={<span>Date: {date.toLocaleDateString()}</span>} 
-            subheading2={<InputArea title={locationName} setTitle={setLocationName} placeholder="location" size={18}/>}
+            subheading2={
+                <div className="flex flex-row gap-2">
+                    <span>Location:</span>
+                    <InputArea title={locationName} setTitle={setLocationName} placeholder="type..." big={false}/>
+                </div>
+            }
             show={popup} 
             body={[
                 {title: "Word Count", value: `${numWords}`},
