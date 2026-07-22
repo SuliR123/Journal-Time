@@ -10,40 +10,26 @@ import { SVGLine } from "./line";
 import { useEffect, useRef, useState } from "react";
 
 export default function NavBar() {
-    const divRef = useRef<HTMLDivElement>(null);
-    const [height, setHeight] = useState(0)
     const [hover, setHover] = useState(false)
 
-    useEffect(() => {
-        if(divRef.current) {
-            setHeight(divRef.current.offsetHeight)
-        }
-    }, []); // Recalculate when show changes
-
     return (
-    <div ref={divRef} className="z-10 absolute w-full h-full pointer-events-none">
-        <div className="flex flex-row items-start justify-between w-full h-full">
-            <div className="flex flex-row h-full pointer-events-auto"
+        <div className="flex flex-row items-start justify-between w-[7%] h-full">
+            <div className="flex flex-row h-full"
                 onMouseEnter={() => setHover(true)}
                 onMouseLeave={() => setHover(false)}
                 >
-                <div className="flex flex-col items-center w-[5vw] h-full">
-                    <div className="flex flex-col items-center justify-between gap-10 h-[95%] z-20 pt-7">
+                <div className="flex flex-col items-center pl-3 w-full h-full">
+                    <div className="flex flex-col items-start justify-between gap-10 w-full h-[95%] pt-7">
                         <IconLink icon={<Logo />} link="/" size="lg"/>
-                        {hover && <div className="flex flex-col items-center gap-10 w-full h-full">
-                            <IconLink icon={<NotebookIcon />} link="/gallery"/>
-                            <IconLink icon={<ClockIcon />} link="/test"/>
-                            <IconLink icon={<NoteIcon />} link="/"/>
-                            <IconLink icon={<StatsIcon />} link="/stats"/>
-                        </div>}
-                        {hover && <IconLink icon={<ProfileIcon/>} link="/profile"/>}
+                        <div className="flex flex-col justify-start items-start gap-10 w-full h-full">
+                            <IconLink icon={<NotebookIcon />} link="/gallery" displayText="Gallery"/>
+                            <IconLink icon={<ClockIcon />} link="/test" displayText="Test"/>
+                            <IconLink icon={<NoteIcon />} link="/" displayText="Create"/>
+                            <IconLink icon={<StatsIcon />} link="/stats" displayText="Stats"/>
+                        </div>
+                        <IconLink icon={<ProfileIcon/>} link="/profile"/>
                     </div>
                 </div>
-                {hover && <SVGLine lineHeight={height} horizontal={false} strokeWidth={1}/>}
             </div>
-            <div className="pt-8 pr-9 pointer-events-auto">
-                <IconLink icon={<ProfileIcon/>} link="/profile"/>
-            </div>
-        </div>
-    </div>)
+        </div>)
 }

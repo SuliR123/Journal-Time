@@ -1,5 +1,6 @@
 import Board from "@/components/board";
 import {BoardParams} from "@/components/board"
+import IconButton from "@/components/icon_button";
 import Scroll from "@/components/scroll";
 import SearchBar from "@/components/search_bar";
 
@@ -15,12 +16,12 @@ export default function Gallery() {
             </div>
             <div className="flex flex-col font-hack font-bold w-full h-full justify-center items-center">
                 <div className="flex flex-col w-[85%] h-[90%] justify-between items-start text-[32px] gap-4">
-                    <div className="flex flex-row justify-between items-center w-full">
+                    <div className="flex flex-row justify-between items-center w-full text-icon-color">
                         <span>Name's Gallery</span>
-                        <span>Create +</span>
+                        <button className="hover:text-text-color">Create</button>
                     </div>
-                    <div className="h-[90%]">
-                        <Scroll vertical={true}> {/*TODO: LOAD REAL INFO HERE + CHANGE TO REAL BOARD CARDS */}
+                    <div className="h-[90%] w-full">
+                        <Scroll vertical={true}> {/*TODO: LOAD REAL INFO HERE*/}
                             {dummyData.map((value: number, index: number) => 
                                 <Board name={`Board ${value}`} numNotes={10} id={index} key={index}/>
                             )} {/* Display number of notes in the board, other metadata like date created maybe*/}

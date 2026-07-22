@@ -1,3 +1,5 @@
+'use client'
+
 import { Dispatch, SetStateAction, useEffect, useRef, useState } from "react";
 import CheckmarkIcon from "@/public/checkmark.svg"
 import RestartIcon from "@/public/restart.svg"
@@ -179,8 +181,9 @@ export default function TextInput() {
   }, [startTimer]); 
 
   // TODO: When going from full to focused if the user scrolled, it might refocus weird
+  // TODO: Cutoff in focus mode is weird when displaying previous line. 
   return (
-    <div className="relative flex items-center justify-center flex-col gap-3 h-full">
+    <div className="relative flex items-center justify-center flex-col gap-3 w-full h-full">
         <OverlayComponent 
             header={<SubmissionComponents title={title} setTitle={setTitle} placeholder="Title..." big={true}/>}
             subheading1={<span>Date: {date.toLocaleDateString()}</span>} 
@@ -208,13 +211,13 @@ export default function TextInput() {
                 console.log(locationData)
             }}
         />
-        <ButtonHolder>
-            <IconButton icon={<ParagraphIcon />} onClick={() => {setFormat(Format.FULL)}} displayText="full"/>
-            <IconButton icon={<FocusedIcon />} onClick={() => {
-                setFormat(Format.FOCUSED)}
-            } displayText="focused"/> 
-        </ButtonHolder>
-        <span className="w-[75vw] text-[24px] text-start font-bold font-hack">{numWords}</span>
+      <ButtonHolder>
+          <IconButton icon={<ParagraphIcon />} onClick={() => {setFormat(Format.FULL)}} displayText="full"/>
+          <IconButton icon={<FocusedIcon />} onClick={() => {
+              setFormat(Format.FOCUSED)}
+          } displayText="focused"/> 
+      </ButtonHolder>
+      <span className="w-[75vw] text-[24px] text-start font-bold font-hack">{numWords}</span>
       <textarea 
         id={"textBox"}
         value={text}
