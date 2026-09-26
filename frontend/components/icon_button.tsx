@@ -1,3 +1,4 @@
+'use client'
 
 interface IconButtonProps {
     icon: React.ReactNode;

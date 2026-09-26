@@ -1,3 +1,5 @@
+'use client'
+
 import { Dispatch, SetStateAction, useEffect, useRef, useState } from "react";
 import CheckmarkIcon from "@/public/checkmark.svg"
 import RestartIcon from "@/public/restart.svg"
@@ -26,7 +28,7 @@ interface SubmissionProps {
     title: string
     setTitle: Dispatch<SetStateAction<string>>
     placeholder: string
-    size: number
+    big: boolean 
 }
 
 function getNumberOfWords(text: string): number {
@@ -105,18 +107,19 @@ function getLocationData(setLocationData: Dispatch<SetStateAction<LocationData>>
     }
 }
 
-function SubmissionComponents({title, setTitle, placeholder, size} : SubmissionProps) {
+function SubmissionComponents({title, setTitle, placeholder, big} : SubmissionProps) {
     return (
         <div className="flex flex-row w-full h-full justify-between items-center">
-            <InputArea title={title} setTitle={setTitle} placeholder={placeholder} size={size}/>
+            <InputArea title={title} setTitle={setTitle} placeholder={placeholder} big={big}/>
             <SearchBar />
         </div>
     )
 }
 
-function InputArea({title, setTitle, placeholder, size} : SubmissionProps) {
+function InputArea({title, setTitle, placeholder, big} : SubmissionProps) {
 
-    const className = `resize-none whitespace-nowrap overflow-x-scroll [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden overflow-hidden focus:outline-none text-nowrap font-bold font-hack w-full h-full text-[${size}px]`
+    const text = big ? "text-[40px]" : "text-[18px]"
+    const className = `resize-none whitespace-nowrap overflow-x-scroll [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden overflow-hidden focus:outline-none text-nowrap font-bold font-hack w-full h-full ${text}`
 
     return (
         <input
@@ -178,12 +181,18 @@ export default function TextInput() {
   }, [startTimer]); 
 
   // TODO: When going from full to focused if the user scrolled, it might refocus weird
+  // TODO: Cutoff in focus mode is weird when displaying previous line. 
   return (
-    <div className="relative flex items-center justify-center flex-col gap-3 h-full">
+    <div className="relative flex items-center justify-center flex-col gap-3 w-full h-full">
         <OverlayComponent 
-            header={<SubmissionComponents title={title} setTitle={setTitle} placeholder="Title..." size={40}/>}
+            header={<SubmissionComponents title={title} setTitle={setTitle} placeholder="Title..." big={true}/>}
             subheading1={<span>Date: {date.toLocaleDateString()}</span>} 
-            subheading2={<InputArea title={locationName} setTitle={setLocationName} placeholder="location" size={18}/>}
+            subheading2={
+                <div className="flex flex-row gap-2">
+                    <span>Location:</span>
+                    <InputArea title={locationName} setTitle={setLocationName} placeholder="type..." big={false}/>
+                </div>
+            }
             show={popup} 
             body={[
                 {title: "Word Count", value: `${numWords}`},
@@ -202,26 +211,33 @@ export default function TextInput() {
                 console.log(locationData)
             }}
         />
-        <ButtonHolder>
-            <IconButton icon={<ParagraphIcon />} onClick={() => {setFormat(Format.FULL)}} displayText="full"/>
-            <IconButton icon={<FocusedIcon />} onClick={() => {
-                setFormat(Format.FOCUSED)}
-            } displayText="focused"/> 
-        </ButtonHolder>
-        <span className="w-[75vw] text-[24px] text-start font-bold font-hack">{numWords}</span>
+      <ButtonHolder>
+          <IconButton icon={<ParagraphIcon />} onClick={() => {setFormat(Format.FULL)}} displayText="full"/>
+          <IconButton icon={<FocusedIcon />} onClick={() => {
+              setFormat(Format.FOCUSED)}
+          } displayText="focused"/> 
+      </ButtonHolder>
+      <span className="w-[75vw] text-[24px] text-start font-bold font-hack">{numWords}</span>
       <textarea 
         id={"textBox"}
         value={text}
         onChange={(e) => setText(e.target.value)}
         placeholder="Type something..."
         className={`${currentFormatStyle} resize-none focus:outline-none w-[75vw] text-[24px] text-start font-bold font-hack`}
-      /> {/* TODO ADD CURSOR ANIMATION AND LOCATION DATA */}
+      /> {/* TODO ADD CURSOR ANIMATION */}
       <ButtonHolder transparent={true}>
         <IconButton icon={<RestartIcon/>} onClick={() => {
             setText("");
             setStartTimer(false);
             timerRef.current.reset(); 
             setTitle("")
+            setLocationName("")
+            setLocationData({
+                longitude: 0,
+                latitude: 0,
+                accuracy: 0,
+                found: false
+            })
             }}
         />
         <IconButton icon={<CheckmarkIcon/>} onClick={() => {

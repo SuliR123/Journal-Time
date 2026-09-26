@@ -30,8 +30,10 @@ export default function RootLayout({
       <body
         className={`${ebGaramond.variable} ${hack.variable} antialiased`}
       >
-        <NavBar />
-        {children}
+        <div className="flex w-[100vw] h-[100vh] divide-x-2">
+          <NavBar />
+          {children}
+        </div>
       </body>
     </html>
   );

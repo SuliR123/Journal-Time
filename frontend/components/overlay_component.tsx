@@ -21,14 +21,11 @@ interface OverlayComponentParams {
     onMount?: () => void
 }
 
-function createBodyComponent(bodyParam : BodyParam, lineWidth: number, index: number) {
+function createBodyComponent(bodyParam : BodyParam, index: number) {
     return (
-        <div className="flex flex-col justify-between items-center gap-2 py-2" key={index}>
-            <div className="flex w-full flex-row justify-between font-bold font-hack text-[16px]">
-                <span>{bodyParam.title}</span>
-                <span>{bodyParam.value}</span>
-            </div>
-            <SVGLine horizontal={true} strokeWidth={2} lineHeight={lineWidth}/>
+        <div className="flex w-full flex-row justify-between font-bold font-hack text-[16px]" key={index}>
+            <span>{bodyParam.title}</span>
+            <span>{bodyParam.value}</span>
         </div>
     )
 }
@@ -55,7 +52,7 @@ export default function OverlayComponent({ header, subheading1, subheading2, bod
 
     return (
         <div className="flex items-center justify-center absolute w-[100vw] h-[100vh] z-20">
-            <div className="flex items-center justify-center w-[40%] h-[70%] bg-background-color z-40 rounded-lg">
+            <div className="flex items-center justify-center w-[50%] h-[70%] bg-background-color z-40 rounded-lg">
                 <div ref={divRef} className="flex flex-col justify-start items-start w-[93%] h-[93%] px-4">
                     <div className="flex flex-col justify-start items-start w-full h-[25%] gap-5">
                         <div className="flex flex-col justify-center items-start w-full h-[50%]">
@@ -67,8 +64,10 @@ export default function OverlayComponent({ header, subheading1, subheading2, bod
                         </div>
                     </div>
                     
-                    <div className="flex flex-col items-start justify-center py-4 w-full h-[75%]">
-                        {body.map((item, index) => (createBodyComponent(item, width, index)))}
+                    <div className="flex flex-col items-start justify-center w-full h-[70%]">
+                        <div className="flex flex-col items-start justify-center divide-y-2 w-full gap-4 border-b-2">
+                            {body.map((item, index) => (createBodyComponent(item, index)))}
+                        </div>
                     </div>
 
                     <div className="flex w-full flex-row justify-center items-center">

@@ -5,6 +5,8 @@ NOTES: (Fields: Title, Board)
 - Sharing notes to people
 - "1 off" notes, notes that expire after a certain amount of time (quick lists, small stuff)
 - stash button, to store the current typed note (if it isn't done)
+- Note number! Stores what number note the note is out of all the notes the user typed
+- REACH GOALLL: Add subsections to notes 
 
 NEW LAYOUT IDEA FOR NOTE. Combination of Arc Sidebar + Substack note formatting + MonkeyType minimalism
 - Change navbar to hidden sidebar (hidden when typing on notes)
@@ -13,11 +15,13 @@ NEW LAYOUT IDEA FOR NOTE. Combination of Arc Sidebar + Substack note formatting 
 - Top of the page will offer all of the formatting stuff (focused, paragraph, one time note, etc)
 
 
-ANALYTICS/STATS:
+ANALYTICS/STATS/Profile:
+- Display user name, other relevant things about their profile
 - Weekly recap of typed notes and stuff
 - Journal Goals
 - A YEAR AGO TODAY, LOCATION
 - FOR LOCATION: Get the geolocation of the person and extract the city (or overarching area) from the longitude latitude 
+- Can look at friends stats/profile page
 
 TYPE TEST:
 - Type testing your own journal entries, take a random slice of the entry
@@ -27,6 +31,7 @@ GALLERY:
 - Creating Boards 
 - Deleted notes, stored in trash until permenently deleted
 - viewing notes, editing notes
+
 
 
 MARKETING?:

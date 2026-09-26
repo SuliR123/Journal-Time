@@ -1,21 +1,21 @@
 package server
 
 import (
-	"github.com/SuliR123/Journal-Time/internal/handlers"
-	health "github.com/SuliR123/Journal-Time/internal/handlers/Health"
-	"github.com/gin-gonic/gin"
+	"net/http"
+
+	health "github.com/SuliR123/Journal-Time/internal/handlers/health"
+	"github.com/danielgtaylor/huma/v2"
+	"github.com/danielgtaylor/huma/v2/adapters/humago"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
-func CreateApp(connection *pgxpool.Pool) *gin.Engine {
+func CreateApp(connection *pgxpool.Pool) *http.ServeMux {
 
-	router := gin.Default()
+	mux := http.NewServeMux()
+	api := humago.New(mux, huma.DefaultConfig("Jounral Time API", "1.0.0"))
 
 	// Create all the routing groups:
-	var routeGroups []handlers.RouteFN = []handlers.RouteFN{health.Route}
-	for _, fn := range routeGroups {
-		fn(router, connection)
-	}
+	health.Route(api, connection)
 
-	return router
+	return mux
 }
