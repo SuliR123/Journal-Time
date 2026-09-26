@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"net/http"
 	"os"
 
 	"github.com/SuliR123/Journal-Time/internal/server"
@@ -29,5 +30,6 @@ func main() {
 
 	app := server.CreateApp(dbpool)
 
-	app.Run("localhost:8080")
+	port := os.Getenv("PORT")
+	http.ListenAndServe(port, app)
 }
