@@ -39,11 +39,13 @@ type Balls struct {
 
 ### Foreign Key:
 
-Represents a connection from this field to another table in the database
+Represents a connection from this field to another row in a seperate table in the database
 
-When creating the struct in the models folder, the type of the field in go should match the struct of the table this field is refering too.
+When creating the struct in the models folder, the type of the field in Golang should match the struct of the table this field is refering too.
 
 However, the type for the entry in the database should match the field the foreign key is referring to. For example if the there was a field referring to the "balls" table via the id (type:uuid) on my struct "Bruh" the type of the field in go would correspond to the Balls object (which corresponds to the Balls table) while the sorm:"type:_" would be uuid as the "bruh" table will store the uuid corresponding to the balls object
+
+To declare the table and the subsequent column use the format <table_name>.<column_name>
 
 Ex:
 ``` go
@@ -96,6 +98,17 @@ type Balls struct {
 
 ```
 
+### Null:
+
+Allows the column to contain null values. *NOTE* If "not null" is not specified the column will be defaulted to allowing null values
+
+``` go
+type Balls struct {
+    Id uuid.UUID `json:"id" sorm:"type:uuid;null"`
+}
+
+```
+
 ### Unique:
 
 Ensures there can only be one row with a given value for this column in a table
@@ -107,9 +120,11 @@ type Balls struct {
 
 ```
 
+
+
 ### Type (*REQUIRED*):
 
-Represents the type the field will be stored as within the Postgress database. This type must be one of the supported types within the Postgres database. To see an exhaustive list of supported migration types check SORM/src/migrations/entries/postgres_types.txt (I might've missed some but here's the working list I have so far)
+Represents the type the field will be stored as within the Postgress database. This type must be one of the supported types within the Postgres database. To see an exhaustive list of supported migration types check SORM/src/migrations/entries/postgres_types.go (I might've missed some but here's the working list I have so far)
 
 The "type" is a mapped value, meaning it must take in the type value you expect it to be in the database
 

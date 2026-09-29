@@ -2,8 +2,6 @@ package entries
 
 import (
 	"fmt"
-	"os"
-	"path/filepath"
 	"regexp"
 	"slices"
 	"strings"
@@ -15,6 +13,7 @@ var constraints []string = []string{
 	"not null",
 	"unique",
 	"primary key",
+	"null",
 }
 
 var mappedConstraints []string = []string{
@@ -25,38 +24,77 @@ var mappedConstraints []string = []string{
 	"type",
 }
 
+var actions []string = []string{"no action", "restrict", "cascade", "set null", "set default"}
+
 type Field struct {
 	name       string
+	typeStr    string
 	tags       []string
 	mappedTags map[string]string
 }
 
 func NewField(tagString string) (*Field, error) {
-	name, mappedSormTags, sormTags, err := createTagList(tagString)
+	name, typeStr, mappedSormTags, sormTags, err := createTagList(tagString)
 	if err != nil {
 		return nil, err
 	}
 
 	return &Field{
 		name:       name,
+		typeStr:    typeStr,
 		tags:       sormTags,
 		mappedTags: mappedSormTags,
 	}, nil
 }
 
-func (f *Field) WriteToSQL() {
-	/*
-		TAG LIST:
-			- NOT NULL
-			- UNIQUE
-			- PRIMARY KEY
-			- FOREIGN KEY (ON UPDATE, ON DELETE, CASCADE, NO ACTION)
-			- CHECK
-			- EXCLUSION
-			- DEFAULT
+func (f *Field) WriteToSQLTable(table ISQLTable) error {
+	table.AddColumn(f.name, f.typeStr)
 
-		TYPES: prolly will make a txt file of all the types and load it in
-	*/
+	if !slices.Contains(f.tags, "null") && !slices.Contains(f.tags, "not null") {
+		f.tags = append(f.tags, "null")
+	}
+
+	for _, constraint := range f.tags {
+		err := mapConstraintToTable(constraint, f.name, table)
+		if err != nil {
+			return fmt.Errorf("Could not create field %s in table, got error: %s", f.name, err.Error())
+		}
+	}
+
+	tableReference, ok := f.mappedTags["foreign key"]
+	if ok {
+		onUpdate := "no action"
+		onDelete := "no action"
+		updateAction, onUpdatePresent := f.mappedTags["on update"]
+		deleteAction, onDeletePresent := f.mappedTags["on delete"]
+		if onUpdatePresent {
+			onUpdate = updateAction
+		}
+
+		if onDeletePresent {
+			onDelete = deleteAction
+		}
+		tableName, referenceColumn, _ := strings.Cut(tableReference, ".")
+		err := table.AddForeignKey(f.name, tableName, referenceColumn, onUpdate, onDelete)
+		if err != nil {
+			return fmt.Errorf("Was not able to create foreign key constraint for the field %s, got error: %s", f.name, err.Error())
+		}
+	}
+
+	for constraint, value := range f.mappedTags {
+		switch constraint {
+		case "default":
+			err := table.AddDefault(f.name, value)
+			if err != nil {
+				return err
+			}
+			return nil
+		default:
+			return fmt.Errorf("Cannot add field %s to SQL table, Cannot process the given constraint: %s", f.name, constraint)
+		}
+	}
+
+	return nil
 }
 
 func (f *Field) String() string {
@@ -68,24 +106,26 @@ HELPER FUNCTIONS
 */
 
 // Parse the name of the field based on the json tag and database values for the field based on the sorm tags
-func createTagList(tagString string) (string, map[string]string, []string, error) {
+func createTagList(tagString string) (parsedName string, parsedType string, parsedMappedTags map[string]string, parsedTags []string, err error) {
 	var tagList []string
 	var mappedTags map[string]string
 	var name string
+	var typeStr string
 	tags := splitTagString(tagString)
 	for _, tag := range tags {
 		tagKey, tagValue, parseErr := parseTag(tag)
 		if parseErr != nil {
-			return "", nil, nil, parseErr
+			return "", "", nil, nil, parseErr
 		}
 		switch tagKey {
 		case "json":
 			name = tagValue
 		case "sorm":
-			mappedSormTagValues, sormValues, err := parseSormTags(tagValue)
+			parsedType, mappedSormTagValues, sormValues, err := parseSormTags(tagValue)
 			if err != nil {
-				return "", nil, nil, err
+				return "", "", nil, nil, err
 			}
+			typeStr = parsedType
 			tagList = sormValues
 			mappedTags = mappedSormTagValues
 		default:
@@ -93,13 +133,13 @@ func createTagList(tagString string) (string, map[string]string, []string, error
 		}
 	}
 	if name == "" {
-		return "", nil, nil, fmt.Errorf("Cannot create field without 'json' tag, required to identify the field name in database")
+		return "", "", nil, nil, fmt.Errorf("Cannot create field without 'json' tag, required to identify the field name in database")
 	}
 
-	if len(tagList) == 0 {
-		return "", nil, nil, fmt.Errorf("Cannot create field without 'sorm' tag, required to configure migrations for the field")
+	if len(tagList) == 0 && len(mappedTags) == 0 {
+		return "", "", nil, nil, fmt.Errorf("Cannot create field without 'sorm' tag, required to configure migrations for the field")
 	}
-	return name, mappedTags, tagList, nil
+	return name, typeStr, mappedTags, tagList, nil
 }
 
 // Retrieve all of the tags within a given tag string, assumes there is only 1 space between each tag
@@ -134,25 +174,25 @@ func splitTagString(tagString string) []string {
 }
 
 // Parse a given field tag string and return the key of the tag and the value
-func parseTag(tag string) (string, string, error) {
+func parseTag(tag string) (tagKey string, tagValue string, err error) {
 	before, _, ok := strings.Cut(tag, ":")
 	if !ok {
-		return "", "", fmt.Errorf("Tag is formatted incorrectly, `:` is required in the tag : %s", tag)
+		return "", "", fmt.Errorf("Tag is formatted incorrectly, `:` is required in the tag: %s", tag)
 	}
 	key := before
 	_, after, found := strings.Cut(tag, `"`)
 	if !found {
-		return "", "", fmt.Errorf(`Tag is formatted incorrectly, expected "" around the tag value (e.x: json:"id"): %s`, tag)
+		return "", "", fmt.Errorf(`Tag is formatted incorrectly, expected "" around the tag value (ex: json:"id"): %s`, tag)
 	}
 	value := after[:strings.Index(after, `"`)]
 	return key, value, nil
 }
 
 // Parses and validates a sorm tag value to get the information to create a field migration entry
-func parseSormTags(tagValue string) (map[string]string, []string, error) {
+func parseSormTags(tagValue string) (typeStr string, mappedTags map[string]string, tags []string, err error) {
 	validFormat := validationRegex.MatchString(tagValue)
 	if !validFormat {
-		return nil, nil, fmt.Errorf("sorm tag is formatted incorrectly: %s", tagValue)
+		return "", nil, nil, fmt.Errorf("sorm tag is formatted incorrectly: %s", tagValue)
 	}
 	var tagValues []string = strings.Split(tagValue, ";")
 	// create a mapping of fields for tags with associated values (example: type, default, on update, etc)
@@ -164,48 +204,63 @@ func parseSormTags(tagValue string) (map[string]string, []string, error) {
 		if found {
 			err := validateMappedTagValue(before, after)
 			if err != nil {
-				return nil, nil, err
+				return "", nil, nil, err
 			}
 			mappedSormValues[before] = after
 		} else {
 			err := validateTagValue(tag, constraints)
 			if err != nil {
-				return nil, nil, err
+				return "", nil, nil, err
 			}
 			sormValues = append(sormValues, tag)
 		}
 	}
 
-	_, ok := mappedSormValues["type"]
+	typeStr, ok := mappedSormValues["type"]
 	if !ok {
-		return nil, nil, fmt.Errorf("Cannot create the field with the given sorm value: %s. The field is missing the type value", tagValue)
+		return "", nil, nil, fmt.Errorf("Cannot create the field with the given sorm value: %s. The field is missing the type value", tagValue)
+	}
+	delete(mappedSormValues, "type")
+
+	_, onDelete := mappedSormValues["on delete"]
+	_, onUpdate := mappedSormValues["on update"]
+	_, foreignKey := mappedSormValues["foreign key"]
+	if (onDelete || onUpdate) && !foreignKey {
+		return "", nil, nil, fmt.Errorf(`Cannot contain actions "on update" or "on delete" if a foreign key constraint is not present`)
 	}
 
-	return mappedSormValues, sormValues, nil
+	return typeStr, mappedSormValues, sormValues, nil
 }
 
 func validateMappedTagValue(key string, value string) error {
 	err := validateTagValue(key, mappedConstraints)
 	if err != nil {
-		return err
+		return fmt.Errorf("The given constraint %s is not a processable mapped constraint, check the formatting of the constraint in the sorm tag", key)
 	}
 
 	switch key {
 	case "type": // check if the type is a possible type for a postgres database
-		dir, _ := os.Getwd()
-		typesFilepath := filepath.Join(dir, "SORM", "src", "migrations", "entries", "postgres_types.txt")
-		contentBytes, err := os.ReadFile(typesFilepath)
-		if err != nil {
-			return fmt.Errorf("Unable to parse postgres_types.txt file, recieved the following error when opening the file %e", err)
-		}
-		types := strings.Split(string(contentBytes), " ")
-		if !slices.Contains(types, value) {
+		if !slices.Contains(postgresTypes, value) && !strings.Contains(value, "varchar") {
 			return fmt.Errorf("The given type %s is not a possible type in a postgres database", value)
 		}
 		return nil
 	case "foreign key": // idk how to validate this one yet... might just be up to the db
+		_, _, found := strings.Cut(value, ".")
+		if !found {
+			return fmt.Errorf(`Expected the value of the "foreign key" constraint to be formatted as <table_name>.<column_name> but got "%s"`, value)
+		}
 		return nil
 	case "default": // ^ same idea with this one
+		return nil
+	case "on update":
+		if !slices.Contains(actions, value) {
+			return fmt.Errorf("Given onUpdate action %s is not a possible action, select one of the following: %s", value, actions)
+		}
+		return nil
+	case "on delete":
+		if !slices.Contains(actions, value) {
+			return fmt.Errorf("Given onDelete action %s is not a possible action, select one of the following %s", value, actions)
+		}
 		return nil
 	default:
 		return fmt.Errorf("Cannot process the given constraint %s yet, I'm too lazy to cover all cases...", key)
@@ -217,5 +272,36 @@ func validateTagValue(constraint string, constraintSlice []string) error {
 		return nil
 	} else {
 		return fmt.Errorf("Cannot process the given tag %s, not a possible constraint", constraint)
+	}
+}
+
+func mapConstraintToTable(constraint string, columnName string, table ISQLTable) error {
+	switch constraint {
+	case "not null":
+		err := table.AddNotNull(columnName)
+		if err != nil {
+			return err
+		}
+		return nil
+	case "null":
+		err := table.AddNull(columnName)
+		if err != nil {
+			return err
+		}
+		return nil
+	case "primary key":
+		err := table.AddPrimaryKey(columnName)
+		if err != nil {
+			return err
+		}
+		return nil
+	case "unique":
+		err := table.AddUnique(columnName)
+		if err != nil {
+			return err
+		}
+		return nil
+	default:
+		return fmt.Errorf("Cannot process the given single value constraint into a table, check that the constraint exists: %s", constraint)
 	}
 }

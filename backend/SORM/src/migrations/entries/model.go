@@ -17,8 +17,15 @@ func NewModel(tableName string, fields []IEntry) *Model {
 	}
 }
 
-func (m *Model) WriteToSQL() {
-
+func (m *Model) WriteToSQLTable(table ISQLTable) error {
+	table.AddTableName(m.tableName)
+	for _, field := range m.fields {
+		err := field.WriteToSQLTable(table)
+		if err != nil {
+			return fmt.Errorf("Unable to create SQL table for model %s, got error: %s", m.tableName, err.Error())
+		}
+	}
+	return nil
 }
 
 func (m *Model) String() string {

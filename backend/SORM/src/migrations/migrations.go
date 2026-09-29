@@ -1,6 +1,7 @@
 package migrations
 
 import (
+	"fmt"
 	"go/ast"
 	"go/parser"
 	"go/token"
@@ -58,6 +59,10 @@ func New(dbConnection *pgxpool.Pool, modelsDirPath string) MigrationCommands {
 			return true
 		})
 	}
+
+	table := entries.NewSQLTable()
+	models[0].WriteToSQLTable(table)
+	fmt.Printf("TABLE: %s", table.WriteToSQL())
 
 	// if migrations folder doesn't exist at specified location create it
 

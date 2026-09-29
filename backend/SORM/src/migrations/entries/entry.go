@@ -3,7 +3,7 @@ package entries
 import "fmt"
 
 type IEntry interface {
-	WriteToSQL()
+	WriteToSQLTable(table ISQLTable) error
 
 	fmt.Stringer
 }
