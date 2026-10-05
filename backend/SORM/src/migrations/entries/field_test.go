@@ -71,6 +71,162 @@ func TestParseTagErrorCases(t *testing.T) {
 	}
 }
 
+func TestSORMFormattingRegex(t *testing.T) {
+	pass := validationRegex.MatchString("foreign key:balls.ball;")
+	if pass {
+		t.Fatalf("Trailing ; should fail...")
+	}
+
+	pass = validationRegex.MatchString("")
+	if pass {
+		t.Fatalf("Blank should fail")
+	}
+
+	pass = validationRegex.MatchString("primary key,foreign key:balls.ball")
+	if pass {
+		t.Fatalf("Should fail, sorm tags can only be seperated by ;")
+	}
+
+	pass = validationRegex.MatchString("primary key1")
+	if pass {
+		t.Fatalf("Should fail, no constraint contains a number")
+	}
+
+	pass = validationRegex.MatchString("primary key")
+	if !pass {
+		t.Fatalf("Should not fail, allowed to have one single constraint")
+	}
+
+	pass = validationRegex.MatchString("not null;type:uuid")
+	if !pass {
+		t.Fatalf("Should not fail, allowed to have multiple constraints joined by ;")
+	}
+
+	pass = validationRegex.MatchString("primary key foreign key:balls.balls")
+	if pass {
+		t.Fatalf("Constraints seperated by space should fail")
+	}
+
+	pass = validationRegex.MatchString("default ;foreign key:balls.balls")
+	if pass {
+		t.Fatalf("Cannot have space before ;")
+	}
+
+	pass = validationRegex.MatchString("default;unique;primary key")
+	if !pass {
+		t.Fatalf("Okay this one would just be so wrong")
+	}
+
+	pass = validationRegex.MatchString(";default")
+	if pass {
+		t.Fatalf("Cannot start sorm tag value with ;")
+	}
+
+	pass = validationRegex.MatchString("type:text;on update:no action")
+	if !pass {
+		t.Fatalf("Regex failed for possible value type:text;on update:no action")
+	}
+}
+
+func TestValidMappedTags(t *testing.T) {
+	err := validateMappedTagValue("type", "balls")
+	if err == nil {
+		t.Fatalf("Balls isn't a Postgres type...")
+	}
+
+	err = validateMappedTagValue("type", "text")
+	if err != nil {
+		t.Fatalf("Was unable to validate the type 'text'... somethings broken: %s", err)
+	}
+
+	err = validateMappedTagValue("type", "varchar(50)")
+	if err != nil {
+		t.Fatalf("Aw man the varchar thing didn't work... %s", err)
+	}
+
+	err = validateMappedTagValue("foreign key", "balls.ball")
+	if err != nil {
+		t.Fatalf("Something is broken with the foreign key validation... %s", err)
+	}
+
+	err = validateMappedTagValue("foreign key", "balls")
+	if err == nil {
+		t.Fatalf("Okay this foreign key thing should've broke...")
+	}
+
+	err = validateMappedTagValue("foreign key", ".balls")
+	if err == nil {
+		t.Fatalf("Must have a table before the period for the foreign key...")
+	}
+
+	err = validateMappedTagValue("foreign key", "ball.")
+	if err == nil {
+		t.Fatalf("Must have a column reference after the period for the foreign key...")
+	}
+
+	err = validateMappedTagValue("foreign key", "")
+	if err == nil {
+		t.Fatalf("Was passed no string, should break")
+	}
+
+	err = validateMappedTagValue("on update", "stinky balls?")
+	if err == nil {
+		t.Fatalf("This is not a possible action and should explode")
+	}
+
+	err = validateMappedTagValue("on delete", "stinky balls?")
+	if err == nil {
+		t.Fatalf("This is not a possible action and should explode")
+	}
+
+	err = validateMappedTagValue("on update", "cascade")
+	if err != nil {
+		t.Fatalf("This is a possible action and shouldn't explode... %s", err)
+	}
+
+	err = validateMappedTagValue("on delete", "no action")
+	if err != nil {
+		t.Fatalf("This is a possible action and shouldn't explode...: %s", err)
+	}
+
+	err = validateMappedTagValue("default", "balls")
+	if err != nil {
+		t.Fatalf("Default should return nil")
+	}
+
+	err = validateMappedTagValue("balls", "balls")
+	if err.Error() != "The given constraint balls is not a processable mapped constraint, check the formatting of the constraint in the sorm tag" {
+		t.Fatalf("Recieved the wrong error message for impossible constraint: %s", err)
+	}
+}
+
+func Test_ValidateTagValue(t *testing.T) {
+	err := validateTagValue("primary key", constraints)
+	if err != nil {
+		t.Fatalf("primary key is a valid option")
+	}
+	err = validateTagValue("not null", constraints)
+	if err != nil {
+		t.Fatalf("not null is also an option")
+	}
+	err = validateTagValue("balls", constraints)
+	if err == nil {
+		t.Fatalf("Should throw an error cuz balls ain't an option")
+	}
+}
+
+func Test_ParseTagErrors(t *testing.T) {
+	_, _, _, err := parseSormTags("primary key;foreign key:balls.id")
+	if err.Error() != "Cannot create the field with the given sorm value: primary key;foreign key:balls.id. The field is missing the type value" {
+		t.Fatalf("Missing sorm type did not throw error")
+	}
+
+	_, _, _, err = parseSormTags("type:text;on update:no action")
+	if err == nil || err.Error() != `Cannot contain actions "on update" or "on delete" if a foreign key constraint is not present. Given SORM tag value: type:text;on update:no action` {
+		t.Fatalf("on update error handling fails when on update is present but foreign key is not, %s", err.Error())
+	}
+}
+
 func TestWriteToSQL_IncludeDefaultNull(t *testing.T) {
 	table := NewSQLTable()
 	table.AddTableName("balls")

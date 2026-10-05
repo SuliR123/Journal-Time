@@ -7,7 +7,7 @@ import (
 	"strings"
 )
 
-var validationRegex = regexp.MustCompile(`^[^;]+(?:;[^;]+)*$`)
+var validationRegex = regexp.MustCompile(`^[a-z]+( [a-z]+)?(:[a-z_.()]+( [a-z]+)?)?(?:;[a-z]+( [a-z]+)?(:[a-z_.()]+( [a-z]+)?)?)*$`)
 
 var constraints []string = []string{
 	"not null",
@@ -22,6 +22,8 @@ var mappedConstraints []string = []string{
 	"check",
 	"exclusion",
 	"type",
+	"on update",
+	"on delete",
 }
 
 var actions []string = []string{"no action", "restrict", "cascade", "set null", "set default"}
@@ -69,16 +71,19 @@ func (f *Field) WriteToSQLTable(table ISQLTable) error {
 		deleteAction, onDeletePresent := f.mappedTags["on delete"]
 		if onUpdatePresent {
 			onUpdate = updateAction
+			delete(f.mappedTags, "on update")
 		}
 
 		if onDeletePresent {
 			onDelete = deleteAction
+			delete(f.mappedTags, "on delete")
 		}
 		tableName, referenceColumn, _ := strings.Cut(tableReference, ".")
 		err := table.AddForeignKey(f.name, tableName, referenceColumn, onUpdate, onDelete)
 		if err != nil {
 			return fmt.Errorf("Was not able to create foreign key constraint for the field %s, got error: %s", f.name, err.Error())
 		}
+		delete(f.mappedTags, "foreign key")
 	}
 
 	for constraint, value := range f.mappedTags {
@@ -90,7 +95,7 @@ func (f *Field) WriteToSQLTable(table ISQLTable) error {
 			}
 			return nil
 		default:
-			return fmt.Errorf("Cannot add field %s to SQL table, Cannot process the given constraint: %s", f.name, constraint)
+			return fmt.Errorf("Cannot add field %s to SQL table, cannot process the given constraint: %s", f.name, constraint)
 		}
 	}
 
@@ -226,7 +231,7 @@ func parseSormTags(tagValue string) (typeStr string, mappedTags map[string]strin
 	_, onUpdate := mappedSormValues["on update"]
 	_, foreignKey := mappedSormValues["foreign key"]
 	if (onDelete || onUpdate) && !foreignKey {
-		return "", nil, nil, fmt.Errorf(`Cannot contain actions "on update" or "on delete" if a foreign key constraint is not present`)
+		return "", nil, nil, fmt.Errorf(`Cannot contain actions "on update" or "on delete" if a foreign key constraint is not present. Given SORM tag value: %s`, tagValue)
 	}
 
 	return typeStr, mappedSormValues, sormValues, nil
@@ -245,21 +250,27 @@ func validateMappedTagValue(key string, value string) error {
 		}
 		return nil
 	case "foreign key": // idk how to validate this one yet... might just be up to the db
-		_, _, found := strings.Cut(value, ".")
+		before, after, found := strings.Cut(value, ".")
 		if !found {
 			return fmt.Errorf(`Expected the value of the "foreign key" constraint to be formatted as <table_name>.<column_name> but got "%s"`, value)
 		}
+		if len(before) == 0 {
+			return fmt.Errorf("Must specify table name for the foreign key, got length 0 string before .")
+		}
+		if len(after) == 0 {
+			return fmt.Errorf("Must specify column reference for the foreign key, got length 0 string after .")
+		}
 		return nil
-	case "default": // ^ same idea with this one
+	case "default": // idk how to validate it yet
 		return nil
 	case "on update":
 		if !slices.Contains(actions, value) {
-			return fmt.Errorf("Given onUpdate action %s is not a possible action, select one of the following: %s", value, actions)
+			return fmt.Errorf("Given on update action %s is not a possible action, select one of the following: %s", value, actions)
 		}
 		return nil
 	case "on delete":
 		if !slices.Contains(actions, value) {
-			return fmt.Errorf("Given onDelete action %s is not a possible action, select one of the following %s", value, actions)
+			return fmt.Errorf("Given on delete action %s is not a possible action, select one of the following %s", value, actions)
 		}
 		return nil
 	default:
@@ -271,7 +282,7 @@ func validateTagValue(constraint string, constraintSlice []string) error {
 	if slices.Contains(constraintSlice, constraint) {
 		return nil
 	} else {
-		return fmt.Errorf("Cannot process the given tag %s, not a possible constraint", constraint)
+		return fmt.Errorf("Cannot process the given constraint %s, not a possible constraint with no value %s", constraint, constraintSlice)
 	}
 }
 
